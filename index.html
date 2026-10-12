@@ -972,6 +972,7 @@ const LOCAL_TIME_KEY = "family_updated_at";
 const DEFAULT_CLOUD_URL = "https://getpantry.cloud/apiv1/pantry/6e6dff34-8f72-4c36-9285-2fb0a50e4e18/basket/familydata";
 let cloudPushTimer = null;
 let cloudBooting = true;
+let cloudEverConnected = false;
 
 function getCloudUrl(){ return localStorage.getItem(CLOUD_URL_KEY) || DEFAULT_CLOUD_URL; }
 function getCloudKey(){ return localStorage.getItem(CLOUD_KEY_KEY) || ""; }
@@ -980,12 +981,14 @@ function cloudSetStatus(txt){
     const el = document.getElementById("cloudStatus");
     if(el) el.textContent = txt;
     const tip = document.getElementById("cloudTip");
-    if(tip){
-        if(txt.indexOf("失败") >= 0 || txt.indexOf("未连接") >= 0 || txt.indexOf("暂无数据") >= 0){
-            tip.textContent = "云端：未连接";
-        }else{
-            tip.textContent = "云端：已连接";
-        }
+    if(!tip) return;
+    const isErr = txt.indexOf("失败") >= 0 || txt.indexOf("未连接") >= 0 || txt.indexOf("暂无数据") >= 0;
+    if(!isErr){
+        cloudEverConnected = true;
+        tip.textContent = "云端：已连接";
+    }else{
+        // 瞬时错误（限流/网络波动）不打断已连接状态，静默重试
+        tip.textContent = cloudEverConnected ? "云端：已连接(同步中…)" : "云端：未连接";
     }
 }
 
@@ -1152,12 +1155,12 @@ window.onload = function(){
     const url = getCloudUrl();
     if(url){
         pullFromCloud(false).then(function(){ cloudBooting = false; });
-        // 每8秒自动轮询一次云端，另一台设备的增删改会自动同步过来
+        // 每30秒自动轮询一次云端（间隔太短会被免费云存储限流）
         setInterval(function(){
             if(!cloudBooting && getCloudUrl()){
                 pullFromCloud(false);
             }
-        }, 8000);
+        }, 30000);
     }else{
         cloudBooting = false;
         cloudSetStatus("云端未连接（请先在工具设置中配置云端地址）");
@@ -1166,3 +1169,4 @@ window.onload = function(){
 </script>
 </body>
 </html>
+
