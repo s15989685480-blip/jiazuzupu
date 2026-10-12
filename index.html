@@ -1152,12 +1152,12 @@ window.onload = function(){
     const url = getCloudUrl();
     if(url){
         pullFromCloud(false).then(function(){ cloudBooting = false; });
-        // 每20秒自动轮询一次云端，另一台设备的增删改会自动同步过来
+        // 每8秒自动轮询一次云端，另一台设备的增删改会自动同步过来
         setInterval(function(){
             if(!cloudBooting && getCloudUrl()){
                 pullFromCloud(false);
             }
-        }, 20000);
+        }, 8000);
     }else{
         cloudBooting = false;
         cloudSetStatus("云端未连接（请先在工具设置中配置云端地址）");
@@ -1166,5 +1166,3 @@ window.onload = function(){
 </script>
 </body>
 </html>
-
-
