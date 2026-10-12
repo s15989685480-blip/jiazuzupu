@@ -1027,10 +1027,8 @@ async function pushToCloud(manual){
         const headers = {"Content-Type": "application/json"};
         const key = getCloudKey();
         if(key) headers["Security-key"] = key;
-        let resp = await fetch(url, {method:"PUT", headers: headers, body: JSON.stringify(backup)});
-        if(!resp.ok){
-            resp = await fetch(url, {method:"POST", headers: headers, body: JSON.stringify(backup)});
-        }
+        // pantry.cloud 用 POST 整体覆盖写入；PUT 会导致数组合并拼接，不能用
+        const resp = await fetch(url, {method:"POST", headers: headers, body: JSON.stringify(backup)});
         if(resp.status === 401){ cloudSetStatus("云端同步失败：安全秘钥错误"); return; }
         if(resp.status === 404){ cloudSetStatus("云端同步失败：数据桶不存在，请检查云端地址"); return; }
         if(!resp.ok){ cloudSetStatus("云端同步失败：HTTP " + resp.status); return; }
