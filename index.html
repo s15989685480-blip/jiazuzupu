@@ -638,8 +638,21 @@ function doImportData(){
     }
 }
 //家族树渲染
+//按 id 去重，防止多设备同步时重复数据堆积导致页面卡死
+function dedupeById(arr){
+    if(!Array.isArray(arr)) return [];
+    var seen = {}, out = [];
+    for(var i=0;i<arr.length;i++){
+        var it = arr[i];
+        var k = it && it.id != null ? it.id : ("idx_"+i);
+        if(seen[k]) continue;
+        seen[k] = true;
+        out.push(it);
+    }
+    return out;
+}
 function getFamilyData(){
-    return JSON.parse(localStorage.getItem("family_tree"));
+    return dedupeById(JSON.parse(localStorage.getItem("family_tree") || "[]"));
 }
 //折叠展开控制
 function toggleFold(id){
@@ -817,7 +830,7 @@ function delPerson(pid){
     renderTree();
 }
 //家族传承模块
-function getInheritData(){return JSON.parse(localStorage.getItem("family_inherit"));}
+function getInheritData(){return dedupeById(JSON.parse(localStorage.getItem("family_inherit") || "[]"));}
 function renderInherit(){
     const list = getInheritData();
     let html = "";
@@ -881,7 +894,7 @@ function delInherit(id){
     renderInherit();
 }
 //光荣史记模块
-function getGloryData(){return JSON.parse(localStorage.getItem("family_glory"));}
+function getGloryData(){return dedupeById(JSON.parse(localStorage.getItem("family_glory") || "[]"));}
 function renderGlory(){
     const list = getGloryData();
     let html="";
@@ -979,9 +992,9 @@ function cloudBuildBackup(){
         version: 1,
         updatedAt: Date.now(),
         familyName: localStorage.getItem("family_name"),
-        tree: JSON.parse(localStorage.getItem("family_tree") || "[]"),
-        inherit: JSON.parse(localStorage.getItem("family_inherit") || "[]"),
-        glory: JSON.parse(localStorage.getItem("family_glory") || "[]")
+        tree: dedupeById(JSON.parse(localStorage.getItem("family_tree") || "[]")),
+        inherit: dedupeById(JSON.parse(localStorage.getItem("family_inherit") || "[]")),
+        glory: dedupeById(JSON.parse(localStorage.getItem("family_glory") || "[]"))
     };
 }
 
@@ -1153,4 +1166,5 @@ window.onload = function(){
 </script>
 </body>
 </html>
+
 
