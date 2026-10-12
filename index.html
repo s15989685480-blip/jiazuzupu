@@ -968,10 +968,12 @@ window.onload=()=>{
 const CLOUD_URL_KEY = "cloud_bin_url";
 const CLOUD_KEY_KEY = "cloud_bin_key";
 const LOCAL_TIME_KEY = "family_updated_at";
+// 内置默认云端地址（本家族专属数据桶），任意设备打开即自动连接，无需手填
+const DEFAULT_CLOUD_URL = "https://getpantry.cloud/apiv1/pantry/6e6dff34-8f72-4c36-9285-2fb0a50e4e18/basket/familydata";
 let cloudPushTimer = null;
 let cloudBooting = true;
 
-function getCloudUrl(){ return localStorage.getItem(CLOUD_URL_KEY) || ""; }
+function getCloudUrl(){ return localStorage.getItem(CLOUD_URL_KEY) || DEFAULT_CLOUD_URL; }
 function getCloudKey(){ return localStorage.getItem(CLOUD_KEY_KEY) || ""; }
 
 function cloudSetStatus(txt){
