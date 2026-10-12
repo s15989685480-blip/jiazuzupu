@@ -1045,20 +1045,18 @@ async function pullFromCloud(manual){
         const backup = await resp.json();
         const localTime = parseInt(localStorage.getItem(LOCAL_TIME_KEY) || "0", 10) || 0;
         const cloudTime = backup && backup.updatedAt ? parseInt(backup.updatedAt, 10) : 0;
-        if(!manual && cloudTime && cloudTime < localTime){
+        if(cloudTime && cloudTime < localTime){
             cloudSetStatus("本地数据较新，正在自动上传云端…");
             pushToCloud(false);
             return;
         }
-        if(!manual && cloudTime > localTime){
-            if(!confirm("检测到云端数据较新（" + new Date(cloudTime).toLocaleString() + "），是否用云端数据覆盖本地？")){
-                cloudSetStatus("已保留本地数据（可在工具设置中手动从云端下载）");
-                return;
-            }
+        if(cloudTime > localTime){
+            cloudApply(backup);
+            cloudSetStatus("已自动同步最新云端数据（" + new Date(cloudTime).toLocaleTimeString() + "）");
+            renderTree(); renderInherit(); renderGlory();
+            return;
         }
-        cloudApply(backup);
-        cloudSetStatus("已从云端恢复数据" + (cloudTime ? "（" + new Date(cloudTime).toLocaleTimeString() + "）" : ""));
-        renderTree(); renderInherit(); renderGlory();
+        cloudSetStatus("云端已是最新");
     }catch(e){
         cloudSetStatus("云端下载失败：" + (e && e.message ? e.message : "网络异常"));
     }
@@ -1141,6 +1139,12 @@ window.onload = function(){
     const url = getCloudUrl();
     if(url){
         pullFromCloud(false).then(function(){ cloudBooting = false; });
+        // 每20秒自动轮询一次云端，另一台设备的增删改会自动同步过来
+        setInterval(function(){
+            if(!cloudBooting && getCloudUrl()){
+                pullFromCloud(false);
+            }
+        }, 20000);
     }else{
         cloudBooting = false;
         cloudSetStatus("云端未连接（请先在工具设置中配置云端地址）");
